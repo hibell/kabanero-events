@@ -41,7 +41,6 @@ const (
 	URL                        = "url"
 	USERNAME                   = "username"
 	PASSWORD                   = "password"
-	TOKEN                      = "token"
 	SECRETS                    = "secrets"
 	SPEC                       = "spec"
 	COLLECTIONS                = "collections"
@@ -53,27 +52,23 @@ const (
 )
 
 /*
- Find the user/token for a Github APi KEy
+ Find the user/password for a GitHub API key
  The format of the secret:
 apiVersion: v1
+data:
+  password: <base64-encoded password>
+  username: <base64-encoded username>
 kind: Secret
 metadata:
-  name:  kabanero-org-test-secret
-  namespace: kabanero
   annotations:
-   url: https://github.ibm.com/kabanero-org-test
-type: Opaque
-stringData:
-  url: <url to org or repo>
-data:
-  username:  <base64 encoded user name>
-  token: <base64 encoded token>
+    tekton.dev/git-0: https://github.ibm.com
+    kabanero.io/git-0: <url to org or repo> # Optional. Only necessary if it differs from tekton.dev/git-0.
+  name: my-github-secret
+type: kubernetes.io/basic-auth
 
- If the url in the secret is a prefix of repoURL, and username and token are defined, then return the user and token.
- Return user, token, error.
+ If the url in the secret is a prefix of repoURL, and username and password are defined, then return the user and token.
+ Return: username, password, secret name, error
  TODO: Change to controller pattern and cache the secrets.
-
-Return: username, token, secret name, error
 */
 func getURLAPIToken(dynInterf dynamic.Interface, namespace string, repoURL string) (string, string, string, error) {
 	if klog.V(5) {

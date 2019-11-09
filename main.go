@@ -43,7 +43,6 @@ import (
 
 /* useful constants */
 const (
-	kubeAPIURL       = "http://localhost:9080"
 	DEFAULTNAMESPACE = "kabanero"
 	KUBENAMESPACE    = "KUBE_NAMESPACE"
 	KABANEROINDEXURL = "KABANERO_INDEX_URL" // use the given URL to fetch kabaneroindex.yaml
@@ -53,7 +52,6 @@ var (
 	masterURL            string                      // URL of Kube master
 	kubeconfig           string                      // path to kube config file. default <home>/.kube/config
 	klogFlags            *flag.FlagSet               // flagset for logging
-	gitHubListener       *GitHubListener             // Listens for and handles GH events
 	kubeClient           *kubernetes.Clientset
 	discClient           *discovery.DiscoveryClient
 	dynamicClient        dynamic.Interface
@@ -70,8 +68,8 @@ func init() {
 		signal.Notify(sigChan, syscall.SIGINT)
 		buf := make([]byte, 1<<20)
 		<-sigChan
-		stacklen := runtime.Stack(buf, true)
-		klog.Infof("=== received SIGQUIT ===\n*** goroutine dump...\n%s\n*** end\n", buf[:stacklen])
+		stackLen := runtime.Stack(buf, true)
+		klog.Infof("=== received SIGQUIT ===\n*** goroutine dump...\n%s\n*** end\n", buf[:stackLen])
 		os.Exit(1)
 	}()
 }
@@ -120,7 +118,7 @@ func main() {
 
 	kabaneroIndexURL := os.Getenv(KABANEROINDEXURL)
 	if kabaneroIndexURL == "" {
-		// not overriden, use the one in the kabanero CRD
+		// not overridden, use the one in the kabanero CRD
 		kabaneroIndexURL, err = getKabaneroIndexURL(dynamicClient, webhookNamespace)
 		if err != nil {
 			klog.Fatal(fmt.Errorf("unable to get kabanero index URL from kabanero CRD. Error: %s", err))
@@ -148,55 +146,11 @@ func main() {
 		klog.Fatal(fmt.Errorf("unable to initialize trigger definition: %s", err))
 	}
 
-	// gvr := schema.GroupVersionResource { Group: "app.k8s.io", Version: "v1beta1", Resource: "applications" }
-	// deleteOrphanedAutoCreatedApplications(dynamicClient, gvr )
-
-	// plugin := &ControllerPlugin{dynamicClient, discClient, DefaultBatchDuration, calculateComponentStatus}
-	// resController, err := NewClusterWatcher(plugin)
-	// _, err = NewClusterWatcher(plugin)
-	// if err != nil {
-	//	klog.Fatal(err)
-	//}
-
 	// Handle GitHub events
     err = newListener()
 	if err != nil {
 		klog.Fatal(err)
 	}
-	
-//	if gitHubListener, err = NewGitHubEventListener(dynamicClient); err != nil {
-//		klog.Fatal(err)
-//	}
-//
-//	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-//		payload, err := gitHubListener.ParseEvent(r)
-//
-//		if err == nil {
-//			/*
-//				switch payload.(type) {
-//				case RepositoryEvent:
-//					// TODO: The type switch isn't working correctly for some reason. Fix.
-//					klog.Infof("Received Repository event:\n%v\n", payload)
-//				}
-//			*/
-//
-//			klog.Infof("Received Repository event:\n%v\n", payload)
-//			// TODO: Fix this mismatch
-//			buffer, err := json.Marshal(payload)
-//			if err == nil {
-//				var f interface{}
-//				err := json.Unmarshal(buffer, &f)
-//				if err == nil {
-//					message := f.(map[string]interface{})
-//					triggerProc.processMessage(message)
-//				}
-//			}
-//		} else {
-//			klog.Error(err)
-//		}
-//	})
-//
-//	klog.Fatal(http.ListenAndServe(":8080", nil))
 
 	select {}
 }
@@ -261,7 +215,6 @@ func printPods(pods *v1.PodList) {
 }
 
 func init() {
-	// flag.StringVar(&kubeconfig, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
 	if home := homedir.HomeDir(); home != "" {
 		flag.StringVar(&kubeconfig, "kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
 	} else {
@@ -271,7 +224,7 @@ func init() {
 	flag.BoolVar(&disableTLS, "disableTLS", false, "set to use non-TLS listener")
 	flag.BoolVar(&skipChkSumVerify, "skipChecksumVerify", false, "set to skip the verification of trigger collection checksum")
 
-	// init falgs for klog
+	// init flags for klog
 	klog.InitFlags(nil)
 
 }
